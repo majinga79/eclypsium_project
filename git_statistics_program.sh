@@ -93,23 +93,46 @@ query_repo() {
     fetch_repo_details "$REPO" | tee -a $LOGFILE
 }
 
-# Function to list log files and prompt for viewing
+# Function to list log and HTML files, and allow viewing
 view_logs() {
-    echo -e "\n${MAGENTA}📂 Available log files in the current directory:${NC}\n"
-    echo
-    echo "Showing log files: "
-    echo
-    ls -lha *.log
-    echo
-    ls -lha | grep _all_repos_data
-    echo -e "\n${YELLOW}🔹 Copy and paste a filename from the list above to view it:${NC}\n"
-    read -p "📖 Log file to view: " LOGFILE
+    echo -e "\n${MAGENTA}📂 Available files in the current directory:${NC}\n"
 
-    if [[ -f "$LOGFILE" ]]; then
-        cat "$LOGFILE"
+    LOG_FILES=$(ls *.log 2>/dev/null)
+    HTML_FILES=$(ls *.html 2>/dev/null)
+
+    if [[ -n "$LOG_FILES" ]]; then
+        echo -e "${GREEN}✅ Log files found:${NC}\n"
+        ls -lha *.log
+        echo
+    else
+        echo -e "${RED}❌ No log files found.${NC}\n"
+    fi
+
+    if [[ -n "$HTML_FILES" ]]; then
+        echo -e "${GREEN}✅ HTML files found:${NC}\n"
+        ls -lha *.html
+        echo
+    else
+        echo -e "${RED}❌ No HTML files found.${NC}\n"
+    fi
+
+    echo -e "\n${YELLOW}🔹 Copy and paste a filename from the list above to view it:${NC}\n"
+    read -p "📖 File to view: " FILE
+
+    if [[ -f "$FILE" ]]; then
+        if [[ "$FILE" == *.log ]]; then
+            echo -e "\n${CYAN}📖 Displaying log file: ${WHITE}$FILE${NC}\n"
+            cat "$FILE"
+        elif [[ "$FILE" == *.html ]]; then
+            echo -e "\n${GREEN}🌍 Opening HTML file in browser: ${WHITE}$FILE${NC}\n"
+            xdg-open "$FILE" &>/dev/null || echo -e "${RED}❌ Unable to open in browser. Open manually: $FILE${NC}\n"
+        else
+            echo -e "${RED}❌ Invalid file type. Please select a .log or .html file.${NC}\n"
+        fi
     else
         echo -e "${RED}❌ File not found. Please try again.${NC}\n"
     fi
+
     echo
     read -p "Press enter to return to main menu: " enter
 }
@@ -186,6 +209,154 @@ delete_all_logs() {
     read -p "Press enter to return to main menu: " enter
 }
 
+# Function to generate a futuristic HTML report from a log file
+generate_html_report() {
+    echo -e "\n${MAGENTA}📂 Available log files:${NC}\n"
+    ls -lha *.log 2>/dev/null || { echo -e "${RED}❌ No log files found.${NC}\n"; return; }
+
+    echo -e "\n${YELLOW}🔹 Copy and paste a filename from the list above to generate an HTML report:${NC}\n"
+    read -p "📖 Log file to convert: " LOGFILE
+
+    if [[ ! -f "$LOGFILE" ]]; then
+        echo -e "${RED}❌ File not found. Please try again.${NC}\n"
+        return
+    fi
+
+    TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
+    HTMLFILE="${LOGFILE%.log}_report_${TIMESTAMP}.html"
+
+    # Remove ANSI color escape sequences from log file
+    CLEANED_LOG=$(sed -E 's/\x1B\[[0-9;]*[mK]//g' "$LOGFILE")
+
+    # Start the HTML structure
+    cat <<EOF > "$HTMLFILE"
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GitHub Report - $LOGFILE</title>
+    <style>
+        body {
+            font-family: 'Courier New', monospace;
+            background-color: #121212;
+            color: #00ffaa;
+            padding: 20px;
+            text-align: center;
+        }
+        h1 {
+            color: #00ffaa;
+            text-shadow: 0px 0px 15px #00ffaa;
+            font-size: 28px;
+            margin-bottom: 5px;
+        }
+        h2 {
+            color: #ddd;
+            font-size: 18px;
+            margin-top: 0;
+            opacity: 0.8;
+        }
+        .repo-container {
+            width: 80%;
+            margin: 20px auto;
+            background-color: #1e1e1e;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0px 0px 20px #00ffaa;
+            text-align: left;
+        }
+        .section-title {
+            background: linear-gradient(90deg, #00ffaa, #0088cc);
+            color: #121212;
+            padding: 10px;
+            font-weight: bold;
+            text-align: center;
+            border-radius: 5px;
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+        .content {
+            background-color: #000;
+            padding: 12px;
+            border-radius: 5px;
+            margin-top: 10px;
+            font-size: 14px;
+        }
+        .commit { color: #00ffaa; }
+        .branch { color: #ffcc00; font-weight: bold; }
+        .deleted-branch { color: #ff6666; font-style: italic; }
+        .pr { color: #66ff66; }
+        .issue { color: #ff9966; }
+        .footer {
+            margin-top: 20px;
+            font-size: 14px;
+            opacity: 0.7;
+        }
+    </style>
+</head>
+<body>
+    <h1>🚀 GitHub Activity Report</h1>
+    <h2>File: $LOGFILE</h2>
+EOF
+
+    # Variables to track sections
+    INSIDE_REPO=false
+
+    # Process log file content and format sections
+    while IFS= read -r line; do
+        if [[ "$line" == "📂 Processing repository:"* ]]; then
+            # Close previous repo container if open
+            if [[ "$INSIDE_REPO" == true ]]; then
+                echo "</div>" >> "$HTMLFILE"
+            fi
+            # Start new repo block
+            echo '<div class="repo-container">' >> "$HTMLFILE"
+            echo "<div class='section-title'>$line</div>" >> "$HTMLFILE"
+            INSIDE_REPO=true
+        elif [[ "$line" == "📜 Latest commits on each branch:"* ]]; then
+            echo '<div class="section-title">📜 Latest Commits</div>' >> "$HTMLFILE"
+        elif [[ "$line" == "📌 Branch:"* ]]; then
+            echo "<div class='branch'>$line</div>" >> "$HTMLFILE"
+        elif [[ "$line" == "🔹 "* ]]; then
+            echo "<div class='commit'>$line</div>" >> "$HTMLFILE"
+        elif [[ "$line" == "🚀 Deleted branches (from merged PRs):"* ]]; then
+            echo '<div class="section-title">🚀 Deleted Branches</div>' >> "$HTMLFILE"
+        elif [[ "$line" == "❌ Deleted branch:"* ]]; then
+            echo "<div class='deleted-branch'>$line</div>" >> "$HTMLFILE"
+        elif [[ "$line" == "📬 Pull Requests:"* ]]; then
+            echo '<div class="section-title">📬 Pull Requests</div>' >> "$HTMLFILE"
+        elif [[ "$line" == "📌 MERGED:"* ]]; then
+            echo "<div class='pr'>$line</div>" >> "$HTMLFILE"
+        elif [[ "$line" == "🐞 Issues:"* ]]; then
+            echo '<div class="section-title">🐞 Issues</div>' >> "$HTMLFILE"
+        elif [[ "$line" == "💬 Discussions:"* ]]; then
+            echo '<div class="section-title">💬 Discussions</div>' >> "$HTMLFILE"
+        elif [[ "$line" == "✅ Done!"* ]]; then
+            echo '<div class="section-title">✅ Report Complete</div>' >> "$HTMLFILE"
+        else
+            echo "<div class='content'>$line</div>" >> "$HTMLFILE"
+        fi
+    done <<< "$CLEANED_LOG"
+
+    # Close last repo container if open
+    if [[ "$INSIDE_REPO" == true ]]; then
+        echo "</div>" >> "$HTMLFILE"
+    fi
+
+    # Finish HTML structure
+    echo "<div class='footer'>Generated on $(date +"%Y-%m-%d %H:%M:%S")</div></body></html>" >> "$HTMLFILE"
+
+    echo -e "\n${GREEN}✅ HTML report generated: ${WHITE}$HTMLFILE${NC}\n"
+
+    # Ask if user wants to open the file
+    read -p "🔹 Open the HTML report in your browser? (y/n): " OPEN_FILE
+    if [[ "$OPEN_FILE" == "y" ]]; then
+        xdg-open "$HTMLFILE" &>/dev/null || echo -e "${RED}❌ Unable to open in browser. Open manually: $HTMLFILE${NC}\n"
+    fi
+
+    read -p "Press enter to return to the main menu: " enter
+}
+
 # Menu function
 menu() {
     while true; do
@@ -199,7 +370,8 @@ menu() {
         echo -e "${YELLOW}4️⃣ Search for a pattern in a log file${NC}"
         echo -e "${YELLOW}5️⃣ Delete a specific log file${NC}"
         echo -e "${YELLOW}6️⃣ Delete all log files${NC}"
-        echo -e "${YELLOW}7️⃣ Exit${NC}\n"
+        echo -e "${YELLOW}7️⃣ Generate a futuristic HTML report from a log file${NC}\n"
+        echo -e "${YELLOW}8️⃣ Exit${NC}\n"
 
         read -p "🔹 Select an option (1-7): " CHOICE
         echo ""
@@ -211,7 +383,8 @@ menu() {
             4) search_logs ;;
             5) delete_log ;;
             6) delete_all_logs ;;
-            7) echo -e "${GREEN}👋 Exiting...${NC}\n"; exit 0 ;;
+            7) generate_html_report ;;
+            8) echo -e "${GREEN}👋 Exiting...${NC}\n"; exit 0 ;;
             *) echo -e "${RED}❌ Invalid option. Try again.${NC}\n" ;;
         esac
     done
