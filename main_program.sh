@@ -56,6 +56,14 @@ function feature7() {
 
 }
 
+function feature8() {
+        echo
+        echo "This is function feature 8"
+        echo
+        read -p "Press enter to terminate session: " enter
+
+}
+
 function main_program() {
 
 	while true; do
@@ -68,7 +76,7 @@ function main_program() {
 		            echo "4 - Feature 4"
 		            echo "5 - Feature 5"
 		            echo "6 - Feature 6"
-		            echo "7 - Feature 7"
+		            echo "8 - Feature 8"
                 echo
                 read -p "Select feature and press enter: " choice
 		case $choice in
