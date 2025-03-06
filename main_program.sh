@@ -128,6 +128,70 @@ function child_feature8() {
 
 }
 
+function child_feature2_1() {
+        echo
+        echo "This is function child feature 2 - 1"
+        echo
+        read -p "Press enter to terminate session: " enter
+
+}
+
+function child_feature2_2() {
+        echo
+        echo "This is function child feature 2 - 2"
+        echo
+        read -p "Press enter to terminate session: " enter
+
+}
+
+function child_feature2_3() {
+        echo
+        echo "This is function child feature 2 - 3"
+        echo
+        read -p "Press enter to terminate session: " enter
+
+}
+
+function child_feature2_4() {
+        echo
+        echo "This is function child feature 2 - 4"
+        echo
+        read -p "Press enter to terminate session: " enter
+
+}
+
+function child_feature2_5() {
+        echo
+        echo "This is function child feature 2 - 5"
+        echo
+        read -p "Press enter to terminate session: " enter
+
+}
+
+function child_feature2_6() {
+        echo
+        echo "This is function child feature 2 - 6"
+        echo
+        read -p "Press enter to terminate session: " enter
+
+}
+
+function child_feature2_7() {
+        echo
+        echo "This is function child feature 2 - 7"
+        echo
+        read -p "Press enter to terminate session: " enter
+
+}
+
+function child_feature2_8() {
+        echo
+        echo "This is function child feature 2 - 8"
+        echo
+        read -p "Press enter to terminate session: " enter
+
+}
+
 function child_program() {
 
   while true; do
@@ -203,6 +267,82 @@ function child_program() {
 
 }
 
+function child_program2() {
+
+  while true; do
+
+    echo
+    echo "Child program 2 menu"
+    echo
+    echo "1 - Child feature 2 - 1"
+    echo "2 - Child feature 2 - 2"
+    echo "3 - Child feature 2 - 3"
+    echo "4 - Child feature 2 - 4"
+    echo "5 - Child feature 2 - 5"
+    echo "6 - Child feature 2 - 6"
+    echo "7 - Child feature 2 - 7"
+    echo "8 - Child feature 2 - 8"
+    echo "9 - Main program"
+    echo
+    read -p "Select feature and press enter: " choice
+    case $choice in
+
+      1)
+        echo
+        child_feature2_1
+        ;;
+
+      2)
+        echo
+        child_feature2_2
+        ;;
+
+      3)
+        echo
+        child_feature2_3
+        ;;
+
+      4)
+        echo
+        child_feature2_4
+        ;;
+
+      5)
+        echo
+        child_feature2_5
+        ;;
+
+      6)
+        echo
+        child_feature2_6
+        ;;
+
+      7)
+        echo
+        child_feature2_7
+        ;;
+
+      8)
+        echo
+        child_feature2_8
+        ;;
+
+      9)
+        echo
+        main_program
+        ;;
+
+      *)
+        echo
+        read -p "Invalid option provided. Press enter to continue to main menu: " enter
+        ;;
+
+		  esac
+	done
+
+}
+
+
 function main_program() {
 
 	while true; do
@@ -218,6 +358,7 @@ function main_program() {
     echo "6 - Feature 6"
     echo "8 - Feature 8"
     echo "9 - Child program"
+    echo "10 - Child program 2"
     echo
     read -p "Select feature and press enter: " choice
 
@@ -267,6 +408,10 @@ function main_program() {
         child_program
         ;;
 
+      10)
+        echo
+        child_program2
+        ;;
       *)
         echo
         read -p "Invalid option provided. Press enter to continue to main menu: " enter
