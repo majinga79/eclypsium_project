@@ -280,6 +280,14 @@ function child_feature2_19() {
 
 }
 
+function child_feature2_20() {
+        echo
+        echo "This is function child feature 2 - 20"
+        echo
+        read -p "Press enter to terminate session: " enter
+
+}
+
 function child_program() {
 
   while true; do
@@ -381,7 +389,8 @@ function child_program2() {
     echo "17 - Child feature 2 - 17"
     echo "18 - Child feature 2 - 18"
     echo "19 - Child feature 2 - 19"
-    echo "20 - Main program"
+    echo "20 - Child feature 2 - 20"
+    echo "21 - Main program"
     echo
     read -p "Select feature and press enter: " choice
     case $choice in
@@ -482,6 +491,11 @@ function child_program2() {
         ;;
 
       20)
+        echo
+        child_feature2_20
+        ;;
+
+      21)
         echo
         main_program
         ;;
