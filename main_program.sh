@@ -256,7 +256,6 @@ function child_feature2_16() {
 
 }
 
-
 function child_program() {
 
   while true; do
